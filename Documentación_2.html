@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guía de Programación del Lenguaje Brik</title>
+  <meta name="description" content="Referencia oficial y guía de sintaxis para programar juegos en el lenguaje Brik." />
+  <style>
+  :root{
+    /* Paleta azul profunda */
+    --bg:#081223;
+    --panel:#0b1730;
+    --panel-2:#0d1c3a;
+    --ink:#e9eef7;
+    --muted:#a8b6d1;
+    --accent:#71b7ff;
+    --accent-ink:#0b111a;
+    --code:#0a1224;
+    --code-ink:#e7edf7;
+    --border:#1a2a4a;
+    --border-2:#22365e;
+    --link:#c1d0ff;
+    --shadow:0 16px 40px rgba(3,12,30,.45);
+    --radius:16px;
+    --radius-sm:12px;
+    --ring:0 0 0 3px rgba(113,183,255,.35);
+    --grad-a:#132950;
+    --grad-b:#0e203f;
+
+    /* Gutters responsivos para centrar contenido */
+    --gutter-inline: clamp(20px, 4vw, 48px);
+    --content-max: 1100px;
+  }
+
+  /* Base */
+  html, body { height:100%; }
+  html { scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 12% -8%, rgba(34,72,128,.25) 0%, transparent 45%),
+      radial-gradient(1200px 600px at 108% 12%, rgba(18,40,85,.28) 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink);
+    font:15px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* Layout: Columna centrada */
+  .container{
+    max-width: var(--content-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding: 28px var(--gutter-inline) 56px;
+    box-sizing: border-box;
+    display: block;
+  }
+
+  /* Hero */
+  header.hero{
+    background:
+      linear-gradient(180deg, rgba(113,183,255,.10), rgba(113,183,255,.03)),
+      linear-gradient(0deg, rgba(255,255,255,.02), rgba(255,255,255,.02));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:var(--shadow);
+    text-align: center;
+  }
+  .hero h1{ margin:4px 0 6px; font-size:28px; letter-spacing:.2px; line-height:1.25; color: var(--accent); }
+  .hero p{ margin:0; color:var(--muted); font-size: 1.1rem; }
+
+  /* Contenido Principal */
+  main.content{
+    background:linear-gradient(180deg, var(--panel), var(--grad-b));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px 28px;
+    margin-top:16px;
+  }
+  section + section{ margin-top:24px; }
+
+  /* Títulos */
+  h2{
+    font-size:22px; margin:0 0 12px; letter-spacing:.2px;
+    position:relative; padding-bottom:8px; line-height:1.25;
+    border-bottom: 2px solid var(--border-2);
+  }
+  h2::after{
+    content:""; position:absolute; left:0; bottom:-2px;
+    width:72px; height:2px;
+    background:var(--accent);
+    border-radius:3px;
+  }
+  h3{ font-size:18px; margin:16px 0 8px; color:var(--ink); line-height:1.25; }
+  p  { color:var(--ink); margin:0 0 12px; }
+  ul { margin: 0 0 12px 20px; padding: 0; }
+  li { margin-bottom: 6px; }
+  .muted{ color:var(--muted); }
+
+  /* Código */
+  code{
+    font-family:Consolas,Menlo,"Fira Mono","JetBrains Mono","SFMono-Regular","DejaVu Sans Mono",monospace;
+    font-size:14px; line-height:1.6;
+    background:linear-gradient(180deg, rgba(10,18,36,.95), rgba(10,18,36,.85));
+    color:var(--code-ink);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:.08em .38em;
+  }
+  pre{
+    background:linear-gradient(180deg, rgba(10,18,36,1), rgba(10,18,36,.94));
+    color:var(--code-ink);
+    border:1px solid var(--border);
+    padding:12px;
+    border-radius:var(--radius-sm);
+    overflow:auto;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    margin:8px 0 14px;
+  }
+  pre code{ background:transparent; border:none; padding:0; }
+
+  /* Clases de sintaxis */
+  .code-keyword { color: #f87171; font-weight: bold; }
+  .code-function { color: #60a5fa; }
+  .code-comment { color: #6b7280; font-style: italic; }
+  .code-string { color: #a5f3fc; }
+  .code-number { color: #fcd34d; }
+  .code-class { color: #a78bfa; font-weight: bold; }
+  .code-builtin { color: #2dd4bf; }
+  .code-bool { color: #f0abfc; }
+
+  /* Tablas */
+  table{
+    width:100%;
+    border-collapse:separate; border-spacing:0;
+    margin:8px 0 14px;
+    background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,0));
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+    display:block;
+    max-width:100%;
+    -webkit-overflow-scrolling:touch;
+  }
+  thead{
+    position:sticky; top:0;
+    background:linear-gradient(180deg, var(--panel-2), var(--panel));
+    backdrop-filter:saturate(120%) blur(4px);
+    z-index:2;
+  }
+  th, td{
+    text-align:left; padding:10px 12px; vertical-align:top;
+    border-bottom:1px solid var(--border);
+  }
+  th{
+    color:var(--muted); font-weight:700; font-size:13px; letter-spacing:.2px;
+  }
+  tbody tr:nth-child(odd) td{ background:rgba(255,255,255,.018); }
+  tbody tr:hover td{ background:rgba(113,183,255,.08); }
+
+  /* Footer */
+  .footer{ margin-top:14px; color:var(--muted); font-size:13px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>Guía de Programación del Lenguaje Brik</h1>
+      <p class="muted">Referencia oficial de sintaxis para el motor de juegos BrikVM.</p>
+    </header>
+
+    <main class="content">
+
+      <section id="sintaxis">
+        <h2>1. Sintaxis Básica</h2>
+
+        <h3>Punto y Coma (<code>;</code>)</h3>
+        <p>Toda sentencia en Brik debe terminar con un punto y coma. Esto indica el fin de una instrucción.</p>
+        <pre><code><span class="code-builtin">print</span>(<span class="code-string">"Hola"</span>)<strong>;</strong>
+<span class="code-keyword">let</span> x = <span class="code-number">10</span><strong>;</strong></code></pre>
+
+        <h3>Comentarios</h3>
+        <p>Los comentarios son de una sola línea y comienzan con <code>//</code>. El intérprete los ignora.</p>
+        <pre><code><span class="code-comment">// Esto es un comentario.</span>
+<span class="code-keyword">let</span> score = <span class="code-number">0</span>; <span class="code-comment">// Asigna el puntaje inicial</span></code></pre>
+      </section>
+
+      <section id="variables-tipos">
+        <h2>2. Variables y Tipos de Datos</h2>
+
+        <h3>Declaración de Variables (<code>let</code> y <code>const</code>)</h3>
+        <p>Las variables deben ser declaradas usando <code>let</code> o <code>const</code>. Brik utiliza <strong>ámbito de función</strong> (las variables son visibles en toda la función donde se declaran, similar a <code>var</code> en JavaScript antiguo).</p>
+        <pre><code><span class="code-comment">// 'let' permite re-asignar el valor</span>
+<span class="code-keyword">let</span> puntuacion = <span class="code-number">100</span>;
+puntuacion = <span class="code-number">150</span>;
+
+<span class="code-comment">// 'const' define una constante (aunque el runtime actual no fuerza la inmutabilidad)</span>
+<span class="code-keyword">const</span> ALTO = <span class="code-number">20</span>;</code></pre>
+
+        <h3>Tipos Primitivos</h3>
+        <ul>
+            <li><strong>Number (Número):</strong> Todos los números se manejan como punto flotante (<code>float</code>).
+                <pre><code><span class="code-keyword">let</span> edad = <span class="code-number">25</span>;
+<span class="code-keyword">let</span> precio = <span class="code-number">10.5</span>;</code></pre>
+            </li>
+            <li><strong>String (Cadena):</strong> Texto definido con comillas dobles.
+                <pre><code><span class="code-keyword">let</span> nombre = <span class="code-string">"Snake"</span>;</code></pre>
+            </li>
+            <li><strong>Boolean (Booleano):</strong> Los valores <code>true</code> y <code>false</code> están disponibles globalmente.
+                <pre><code><span class="code-keyword">let</span> gameOver = <span class="code-bool">false</span>;</code></pre>
+            </li>
+        </ul>
+
+        <h3>Arrays (Listas)</h3>
+        <p>Brik soporta arrays anidados, esenciales para los tableros de juego.</p>
+
+        <h4>Creación</h4>
+        <pre><code><span class="code-keyword">let</span> miArray = [<span class="code-number">1</span>, <span class="code-string">"hola"</span>, <span class="code-bool">true</span>];
+<span class="code-keyword">let</span> matriz = [[<span class="code-number">1</span>, <span class="code-number">2</span>], [<span class="code-number">3</span>, <span class="code-number">4</span>]];</code></pre>
+
+        <h4>Lectura (Acceso por Índice)</h4>
+        <pre><code><span class="code-builtin">print</span>(miArray[<span class="code-number">1</span>]);     <span class="code-comment">// Imprime "hola"</span>
+<span class="code-builtin">print</span>(matriz[<span class="code-number">0</span>][<span class="code-number">1</span>]); <span class="code-comment">// Imprime 2.0</span></code></pre>
+
+        <h4>Escritura (Asignación por Índice)</h4>
+        <pre><code>miArray[<span class="code-number">0</span>] = <span class="code-number">99</span>;
+matriz[<span class="code-number">1</span>][<span class="code-number">1</span>] = <span class="code-number">0</span>;</code></pre>
+      </section>
+
+      <section id="operadores">
+        <h2>3. Operadores</h2>
+
+        <h3>Aritméticos</h3>
+        <p>Manejo especial de <code>+</code>: si uno de los operandos es un string, Brik forzará la concatenación de strings.</p>
+        <pre><code><span class="code-builtin">print</span>(<span class="code-number">5</span> + <span class="code-number">10</span>);     <span class="code-comment">// Imprime 15.0</span>
+<span class="code-builtin">print</span>(<span class="code-string">"Score: "</span> + <span class="code-number">100</span>); <span class="code-comment">// Imprime "Score: 100.0"</span></code></pre>
+        <p>Operadores disponibles: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code> (módulo/resto).</p>
+
+        <h3>Lógicos y de Comparación</h3>
+        <p>Se usan principalmente en sentencias <code>if</code> y <code>while</code>.</p>
+        <ul>
+            <li>Comparación: <code>==</code> (igual), <code>!=</code> (no igual), <code>></code>, <code><</code>, <code>>=</code>, <code><=</code></li>
+            <li>Lógicos: <code>&&</code> (Y), <code>||</code> (O)</li>
+        </ul>
+        <pre><code><span class="code-keyword">if</span> (score > <span class="code-number">100</span> && isPaused == <span class="code-bool">false</span>) {
+    <span class="code-comment">// ...</span>
+}</code></pre>
+        <p class="muted"><strong>Nota:</strong> El operador <code>!</code> (NOT) no está implementado. Para invertir un booleano, usa una sentencia <code>if/else</code>.</p>
+
+        <h3>Asignación</h3>
+        <p>El operador <code>=</code> se usa para asignar valores a variables, propiedades de clase o índices de array.</p>
+        <pre><code><span class="code-keyword">let</span> x = <span class="code-number">10</span>;
+x = <span class="code-number">20</span>;
+<span class="code-keyword">self</span>.propiedad = <span class="code-number">5</span>;
+miArray[<span class="code-number">0</span>] = <span class="code-number">1</span>;</code></pre>
+      </section>
+
+      <section id="control-flujo">
+        <h2>4. Flujo de Control</h2>
+
+        <h3><code>if / else if / else</code></h3>
+        <p>Ejecuta bloques de código condicionalmente. Las llaves <code>{...}</code> son obligatorias.</p>
+        <pre><code><span class="code-keyword">if</span> (tecla == <span class="code-string">"a"</span>) {
+    direccion = constantes.IZQUIERDA;
+} <span class="code-keyword">else if</span> (tecla == <span class="code-string">"d"</span>) {
+    direccion = constantes.DERECHA;
+} <span class="code-keyword">else</span> {
+    <span class="code-comment">// No hacer nada</span>
+}</code></pre>
+
+        <h3><code>while</code></h3>
+        <p>Ejecuta un bloque de código repetidamente mientras la condición sea <code>true</code>.</p>
+        <pre><code><span class="code-keyword">let</span> i = <span class="code-number">0</span>;
+<span class="code-keyword">while</span> (i < <span class="code-number">5</span>) {
+    <span class="code-builtin">print</span>(i);
+    i = i + <span class="code-number">1</span>;
+}</code></pre>
+
+        <h3><code>break</code></h3>
+        <p>Termina la ejecución del bucle <code>while</code> más cercano.</p>
+        <pre><code><span class="code-keyword">while</span> (<span class="code-bool">true</span>) {
+    <span class="code-keyword">if</span> (gameOver == <span class="code-bool">true</span>) {
+        <span class="code-keyword">break</span>; <span class="code-comment">// Sale del bucle</span>
+    }
+}</code></pre>
+      </section>
+
+      <section id="oop-funciones">
+        <h2>5. Funciones y Clases (OOP)</h2>
+        <p>Brik es un lenguaje orientado a objetos basado en clases.</p>
+
+        <h3>Funciones Globales (<code>def</code>)</h3>
+        <p>Puedes declarar funciones en el ámbito global para reutilizar lógica.</p>
+        <pre><code><span class="code-keyword">def</span> <span class="code-function">sumar</span>(a, b) {
+    <span class="code-keyword">return</span> a + b;
+}
+<span class="code-keyword">let</span> resultado = <span class="code-function">sumar</span>(<span class="code-number">5</span>, <span class="code-number">3</span>);
+<span class="code-builtin">print</span>(resultado); <span class="code-comment">// Imprime 8.0</span></code></pre>
+
+        <h3><code>return</code></h3>
+        <p>La sentencia <code>return</code> devuelve un valor de una función y termina su ejecución. Si no se usa, la función devuelve un valor nulo (<code>None</code>).</p>
+
+        <h3>Clases (<code>class</code>)</h3>
+        <p>Define una "plantilla" para un objeto. Las propiedades se definen usando <code>let</code>.</p>
+        <pre><code><span class="code-keyword">class</span> <span class="code-class">Constantes</span> {
+    <span class="code-keyword">let</span> ALTO = <span class="code-number">12</span>;
+    <span class="code-keyword">let</span> ANCHO = <span class="code-number">16</span>;
+}</code></pre>
+
+        <h3>Métodos y <code>self</code></h3>
+        <p>Los métodos son funciones definidas dentro de una clase. El primer parámetro **debe ser <code>self</code>** para acceder a los atributos de la instancia.</p>
+        <pre><code><span class="code-keyword">class</span> <span class="code-class">Auto</span> {
+    <span class="code-keyword">let</span> marca = <span class="code-string">"Brik"</span>;
+
+    <span class="code-keyword">def</span> <span class="code-function">getMarca</span>(<span class="code-keyword">self</span>) {
+        <span class="code-keyword">return</span> <span class="code-keyword">self</span>.marca;
+    }
+
+    <span class="code-keyword">def</span> <span class="code-function">setMarca</span>(<span class="code-keyword">self</span>, nuevaMarca) {
+        <span class="code-keyword">self</span>.marca = nuevaMarca;
+    }
+}</code></pre>
+
+        <h3>Instanciación (<code>new</code>)</h3>
+        <p>Crea un objeto (instancia) a partir de una clase.</p>
+        <pre><code><span class="code-keyword">let</span> miAuto = <span class="code-keyword">new</span> <span class="code-class">Auto</span>;</code></pre>
+
+        <h3>Acceso a Miembros (<code>.</code>)</h3>
+        <p>Se usa el punto para leer atributos y llamar a métodos.</p>
+        <pre><code><span class="code-builtin">print</span>(miAuto.marca); <span class="code-comment">// Lee el atributo</span>
+miAuto.<span class="code-function">setMarca</span>(<span class="code-string">"Tesla"</span>); <span class="code-comment">// Llama al método</span>
+<span class="code-builtin">print</span>(miAuto.<span class="code-function">getMarca</span>());</code></pre>
+      </section>
+
+      <section id="api-nativa">
+        <h2>6. API Nativa (Funciones Incorporadas)</h2>
+        <p>El entorno de Brik proporciona un conjunto de funciones esenciales (implementadas en Python) para interactuar con el sistema.</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Función (en Brik)</th>
+              <th>Descripción Funcional</th>
+              <th>Ejemplo de Uso</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>print(valor)</code></td>
+              <td>Imprime un valor en la consola, seguido de un salto de línea.</td>
+              <td><code>print("Score: " + score);</code></td>
+            </tr>
+            <tr>
+              <td><code>clear_screen()</code></td>
+              <td>Limpia toda la pantalla de la consola.</td>
+              <td><code>clear_screen();</code></td>
+            </tr>
+            <tr>
+              <td><code>sleep(ms)</code></td>
+              <td>Pausa la ejecución del juego por un número de milisegundos.</td>
+              <td><code>sleep(100); <span class="code-comment">// Pausa 100ms</span></code></td>
+            </tr>
+            <tr>
+              <td><code>get_key()</code></td>
+              <td>Comprueba si se ha presionado una tecla. Devuelve el carácter (ej. "w") o <code>None</code> si no se presionó nada. <strong>No bloquea el juego.</strong></td>
+              <td><code>let tecla = get_key();</code></td>
+            </tr>
+            <tr>
+              <td><code>len(arr_o_string)</code></td>
+              <td>Devuelve la longitud (número) de un array o un string.</td>
+              <td><code>while(i < <span class="code-builtin">len</span>(serpiente))</code></td>
+            </tr>
+            <tr>
+              <td><code>rand(min, max)</code></td>
+              <td>Devuelve un número entero aleatorio entre <code>min</code> y <code>max</code> (ambos incluidos).</td>
+              <td><code>comida = [<span class="code-builtin">rand</span>(0, 19), <span class="code-builtin">rand</span>(0, 9)];</code></td>
+            </tr>
+            <tr>
+              <td><code>push_front(arr, val)</code></td>
+              <td>Inserta un <code>valor</code> al inicio de un <code>array</code>.</td>
+              <td><code><span class="code-builtin">push_front</span>(serpiente, nueva_cabeza);</code></td>
+            </tr>
+            <tr>
+              <td><code>pop_tail(arr)</code></td>
+              <td>Elimina y devuelve el último elemento de un <code>array</code>.</td>
+              <td><code><span class="code-builtin">pop_tail</span>(serpiente);</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="footer">
+        <p></p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

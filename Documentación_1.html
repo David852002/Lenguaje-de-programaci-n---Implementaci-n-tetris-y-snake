@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Documentación Completa: Motor BrikVM</title>
+  <meta name="description" content="Análisis de la arquitectura completa: Lexer, Parser (AST) y Runtime del motor de juegos Brik." />
+  <style>
+  :root{
+    /* Paleta azul profunda */
+    --bg:#081223;
+    --panel:#0b1730;
+    --panel-2:#0d1c3a;
+    --ink:#e9eef7;
+    --muted:#a8b6d1;
+    --accent:#71b7ff;
+    --accent-ink:#0b111a;
+    --code:#0a1224;
+    --code-ink:#e7edf7;
+    --border:#1a2a4a;
+    --border-2:#22365e;
+    --link:#c1d0ff;
+    --shadow:0 16px 40px rgba(3,12,30,.45);
+    --radius:16px;
+    --radius-sm:12px;
+    --ring:0 0 0 3px rgba(113,183,255,.35);
+    --grad-a:#132950;
+    --grad-b:#0e203f;
+
+    /* Gutters responsivos para centrar contenido */
+    --gutter-inline: clamp(20px, 4vw, 48px);
+    --content-max: 1100px;
+  }
+
+  /* Base */
+  html, body { height:100%; }
+  html { scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 12% -8%, rgba(34,72,128,.25) 0%, transparent 45%),
+      radial-gradient(1200px 600px at 108% 12%, rgba(18,40,85,.28) 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink);
+    font:15px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* Layout: UNA sola columna centrada (sin desplazar a la izquierda) */
+  .container{
+    max-width: var(--content-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding: 28px var(--gutter-inline) 56px;
+    box-sizing: border-box;
+    display: block; /* simple y estable */
+  }
+
+  /* Hero */
+  header.hero{
+    background:
+      linear-gradient(180deg, rgba(113,183,255,.10), rgba(113,183,255,.03)),
+      linear-gradient(0deg, rgba(255,255,255,.02), rgba(255,255,255,.02));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px; /* compacto */
+    box-shadow:var(--shadow);
+  }
+  .hero h1{ margin:4px 0 6px; font-size:28px; letter-spacing:.2px; line-height:1.25; }
+  .hero p{ margin:0; color:var(--muted); }
+  header.hero > span{
+    display:inline-block; padding:4px 10px; border-radius:999px;
+    background:var(--accent); color:var(--accent-ink);
+    font-weight:700; font-size:12px; letter-spacing:.3px;
+    box-shadow:0 4px 12px rgba(113,183,255,.35);
+  }
+
+  /* Panel principal (centrado igual que el hero) */
+  main.content{
+    background:linear-gradient(180deg, var(--panel), var(--grad-b));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px; /* compacto */
+    margin-top:16px;
+  }
+  section + section{ margin-top:16px; }
+
+  /* Títulos con subrayado elegante y poco aire */
+  h2{
+    font-size:22px; margin:0 0 8px; letter-spacing:.2px;
+    position:relative; padding-bottom:6px; line-height:1.25;
+  }
+  h2::after{
+    content:""; position:absolute; left:0; bottom:0;
+    width:72px; height:3px;
+    background:linear-gradient(90deg, var(--accent), transparent);
+    border-radius:3px;
+  }
+  h3{ font-size:18px; margin:12px 0 6px; color:var(--ink); line-height:1.25; }
+  h4{ font-size:16px; margin:8px 0 6px; color:var(--muted); }
+  p  { color:var(--ink); margin:0 0 10px; }
+  ul { margin: 0 0 10px 20px; padding: 0; }
+  li { margin-bottom: 5px; }
+  .muted{ color:var(--muted); }
+
+  /* Enlaces */
+  a{ color:var(--link); text-decoration:none; }
+  a:hover{ text-decoration:underline; }
+  a:focus{ outline:none; box-shadow:var(--ring); border-radius:8px; }
+
+  /* Código inline y bloques */
+  code, kbd, samp{
+    font-family:Consolas,Menlo,"Fira Mono","JetBrains Mono","SFMono-Regular","DejaVu Sans Mono",monospace;
+    font-size:14px; line-height:1.6; letter-spacing:.01em;
+    background:linear-gradient(180deg, rgba(10,18,36,.95), rgba(10,18,36,.85));
+    color:var(--code-ink);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:.08em .38em;
+  }
+  pre{
+    background:linear-gradient(180deg, rgba(10,18,36,1), rgba(10,18,36,.94));
+    color:var(--code-ink);
+    border:1px solid var(--border);
+    padding:12px;
+    border-radius:var(--radius-sm);
+    overflow:auto;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    margin:8px 0 12px;
+  }
+  pre code{ background:transparent; border:none; padding:0; }
+
+  /* Tablas: caja, zebra, sticky header, scroll-x en móvil */
+  table{
+    width:100%;
+    border-collapse:separate; border-spacing:0;
+    margin:8px 0 14px;
+    background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,0));
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+    display:block; /* scroll horizontal si hace falta */
+    max-width:100%;
+    -webkit-overflow-scrolling:touch;
+  }
+  thead{
+    position:sticky; top:0;
+    background:linear-gradient(180deg, var(--panel-2), var(--panel));
+    backdrop-filter:saturate(120%) blur(4px);
+    z-index:2;
+  }
+  th, td{
+    text-align:left; padding:8px 10px; vertical-align:top;
+    border-bottom:1px solid var(--border);
+  }
+  th{
+    color:var(--muted); font-weight:700; font-size:13px; letter-spacing:.2px;
+  }
+  tbody tr:nth-child(odd) td{ background:rgba(255,255,255,.018); }
+  tbody tr:hover td{ background:rgba(113,183,255,.08); }
+  table::-webkit-scrollbar{ height:10px; }
+  table::-webkit-scrollbar-thumb{ background:#203760; border-radius:999px; }
+  table::-webkit-scrollbar-track{ background:transparent; }
+
+  /* Énfasis */
+  .emphasis{ font-weight:700; color:var(--accent); text-shadow:0 0 12px rgba(113,183,255,.25); }
+
+  /* Footer */
+  .footer{ margin-top:14px; color:var(--muted); font-size:13px; }
+
+  /* Selección de texto */
+  ::selection{ background:rgba(113,183,255,.35); color:#061026; }
+  ::-moz-selection{ background:rgba(113,183,255,.35); color:#061026; }
+
+  /* Responsive */
+  @media (max-width:980px){
+    .container{ padding:22px var(--gutter-inline) 40px; }
+    main.content{ padding:18px; }
+    h2{ font-size:20px; }
+  }
+
+  /* Print */
+  @media print{
+    :root{
+      --bg:#ffffff; --panel:#ffffff; --ink:#111; --muted:#555;
+      --border:#ddd; --link:#0645ad; --shadow:none;
+    }
+    body{ background:#fff; color:#111; }
+    header.hero, main.content{
+      box-shadow:none; border:1px solid var(--border);
+      background:#fff;
+    }
+    a{ text-decoration:underline; color:#0645ad; }
+    table{ display:table; }
+    thead{ position:static; backdrop-filter:none; }
+  }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <span style="display:inline-block;padding:4px 10px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:12px;letter-spacing:.3px;">MOTOR BRIKVM</span>
+      <h1>Documentación Técnica: Arquitectura Completa</h1>
+      <p class="muted">Análisis de la arquitectura completa: Lexer, Parser (AST) y Runtime del motor de juegos Brik.</p>
+    </header>
+
+    <main class="content">
+      <section id="intro">
+        <h2>Visión General</h2>
+        <p>El proyecto BrikVM es un intérprete completo para un lenguaje de scripting personalizado ("Brik"), diseñado específicamente para ejecutar juegos de consola como Snake y Tetris.</p>
+        <p>La arquitectura sigue el flujo clásico de un compilador, dividido en tres etapas principales que se ejecutan en secuencia:</p>
+        <ol class="list-decimal list-inside muted pl-2" style="font-size: 16px; color: var(--muted);">
+            <li><strong>Lexer:</strong> Convierte el código fuente <code>.brik</code> en una lista de tokens.</li>
+            <li><strong>Parser:</strong> Convierte la lista de tokens en un Árbol de Sintaxis Abstracta (AST).</li>
+            <li><strong>Runtime (Intérprete):</strong> "Camina" por el AST y ejecuta el código.</li>
+        </ol>
+      </section>
+
+      <section id="lexer">
+        <h2>1. Lexer: Tokenización (Lexer/)</h2>
+        <p>Es el primer paso. El Lexer escanea el string de código fuente y lo descompone en "palabras" atómicas llamadas tokens. Esto simplifica enormemente el trabajo del Parser.</p>
+
+        <h3>Componentes Clave:</h3>
+        <ul>
+            <li><strong><code>Lexer/Tokens.py</code></strong>: Define la enumeración de todos los <code>TokenKind</code> (ej. <code>NUMBER</code>, <code>STRING</code>, <code>IF</code>, <code>WHILE</code>) como constantes enteras. También contiene el diccionario <code>reserved_lu</code> que mapea palabras clave (como "if", "while", "class") a sus `TokenKind`.</li>
+            <li><strong><code>Lexer/Lexer.py</code></strong>: Contiene la clase `Lexer`. Esta clase utiliza una lista de patrones de expresiones regulares (<code>RegexPattern</code>) para identificar y extraer cada token. Maneja reglas para ignorar espacios en blanco (<code>skipHandler</code>), ignorar comentarios (<code>commentHandler</code>) y distinguir entre palabras clave e identificadores de variables (<code>symbolHandler</code>).</li>
+        </ul>
+
+        <h3>Ejemplo de Flujo del Lexer</h3>
+        <p>El código Brik de entrada:</p>
+        <pre><code>let x = 10;</code></pre>
+        <p>Se convierte en la siguiente lista de tokens (simplificado):</p>
+        <pre><code>[LET, IDENTIFIER(x), ASSIGNMENT, NUMBER(10), SEMICOMMA]</code></pre>
+      </section>
+
+      <section id="parser-ast">
+        <h2>2. Parser y AST: Análisis Sintáctico (Parser/ & Ast1/)</h2>
+        <p>El Parser toma la lista plana de tokens del Lexer y la transforma en un Árbol de Sintaxis Abstracta (AST). El AST es una estructura de datos jerárquica que representa el significado y la estructura lógica del código.</p>
+
+        <h3 id="ast">El AST (<code>Ast1/</code>)</h3>
+        <p>Define las "plantillas" de todos los nodos que pueden existir en el árbol:</p>
+        <ul>
+            <li><strong><code>ast1.py</code></strong>:  Define las clases base <code>Stmt</code> (Sentencia) y <code>Expr</code> (Expresión).</li>
+            <li><strong><code>statements.py</code></strong>: Define nodos de acción como <code>IfStmt</code>, <code>WhileStmt</code>, <code>ClassStatement</code>, <code>FunctionStatement</code>, <code>PrintStmt</code>, <code>BreakStmt</code>, y <code>ReturnStmt</code>.</li>
+            <li><strong><code>expressions.py</code></strong>: Define nodos que producen un valor, como <code>BinaryExpr</code> (para <code>+</code>, <code>==</code>), <code>AssignmentExpr</code> (para <code>=</code>), <code>CallExpr</code> (para <code>()</code>), <code>MemberAccessExpr</code> (para <code>.</code>) y <code>IndexAccessExpr</code> (para <code>[]</code>).</li>
+        </ul>
+
+        <h3 id="parser">El Parser (<code>Parser/</code>)</h3>
+        <p>El proyecto utiliza un Parser Pratt (<code>Parser/parser.py</code>). Este es un enfoque avanzado que maneja la precedencia de operadores (sabe que <code>*</code> se evalúa antes que <code>+</code>) mediante dos tablas de búsqueda:</p>
+        <ul>
+            <li><strong>NUD (Null Denotation)</strong>: Se activa para tokens que inician una expresión (prefijos, literales). Se usa para <code>5</code>, <code>"hola"</code>, <code>miVariable</code>, <code>-10</code>, <code>[1, 2]</code>, o <code>new Carro</code>.</li>
+            <li><strong>LED (Left Denotation)</strong>: Se activa para tokens que siguen a una expresión (infijos o postfijos). Se usa para <code>+</code>, <code>*</code>, <code>==</code>, <code>.</code> (acceso), <code>()</code> (llamada) y <code>[</code> (índice).</li>
+        </ul>
+      </section>
+
+      <section id="runtime">
+        <h2>3. Runtime/interpreter.py: El Despachador de Ejecución</h2>
+        <p>Este módulo se encarga de "caminar" por el AST (tree-walker) y ejecuta el código. Utiliza el patrón Visitor, donde cada tipo de nodo AST tiene una función <code>visit_...</code> correspondiente.</p>
+
+        <h3 id="evaluate">La Función Central: <code>evaluate(node, env)</code></h3>
+        <p>Esta es la función recursiva que impulsa todo. Su trabajo es simple:</p>
+        <ol>
+            <li>Inspecciona el tipo de <code>node</code> (ej. <code>IfStmt</code>).</li>
+            <li>Llama a la función visitante correspondiente (ej. <code>visit_IfStmt(node, env)</code>).</li>
+            <li>Siempre pasa el <code>env</code> (el entorno/scope actual) para que los nodos anidados puedan acceder a las variables.</li>
+        </ol>
+
+        <h3 id="expressions">Manejo de Expresiones y Sentencias</h3>
+        <p>Los visitantes implementan la lógica del lenguaje:</p>
+        <ul>
+            <li><strong><code>visit_BinaryExpr</code></strong>: Maneja <code>+</code>, <code>-</code>, <code>==</code>, etc. Comprueba si un operando es <code>(str, unicode)</code> para forzar la concatenación de strings en lugar de la suma.</li>
+            <li><strong><code>visit_CallExpr</code></strong>: Distingue entre 3 tipos de llamadas: <code>BrikNativeFunction</code> (para <code>len()</code>), <code>BrikBoundMethod</code> (para <code>miAuto.metodo()</code>), y <code>BrikFunction</code> (para <code>miFuncionGlobal()</code>).</li>
+            <li><strong><code>visit_AssignmentExpr</code></strong>: Maneja la asignación para 3 casos: variables (<code>x = 10</code>), propiedades (<code>self.anio = 20</code>) y arrays (<code>pantalla[0][0] = 1</code>).</li>
+            <li><strong><code>visit_IfStmt</code> / <code>visit_WhileStmt</code></strong>: Evalúan su condición. Si es <code>True</code>, llaman a <code>evaluate()</code> en su nodo <code>BlockStmt</code>.</li>
+            <li><strong><code>visit_ReturnStatement</code> / <code>visit_BreakStmt</code></strong>: Lanzan excepciones personalizadas (<code>ReturnException</code>, <code>BreakException</code>) para "saltar" incondicionalmente fuera de una pila de llamadas o un bucle. Los únicos que las atrapan son <code>visit_CallExpr</code> y <code>visit_WhileStmt</code>.</li>
+        </ul>
+      </section>
+
+      <section id="environment">
+        <h2>4. Runtime/environment.py: El API del Sistema y el Contexto</h2>
+        <p>Este módulo define el "contexto" en el que vive el código Brik. Es la "caja de arena" que conecta Brik con el mundo real (Python y el sistema operativo).</p>
+
+        <h3 id="environment-class">La Clase Environment (Tabla de Símbolos)</h3>
+        <p>Es la implementación del "scope" (ámbito). Es un diccionario que mapea nombres de variables (como <code>"x"</code>) a sus valores en el runtime (como <code>10.0</code>).</p>
+        <ul>
+            <li><strong><code>declare(nombre, valor, es_constante)</code></strong>: Registra una nueva variable(como <code>var</code> en JS antiguo).</li>
+            <li><strong><code>get(nombre)</code></strong>: Obtiene el valor de una variable.</li>
+            <li><strong><code>assign(nombre, valor)</code></strong>: Modifica una variable existente.</li>
+            <li><strong><code>__init__</code></strong>: En la inicialización, este entorno se precarga con todas las funciones nativas y constantes (`true`, `false`).</li>
+        </ul>
+
+        <h3 id="types">Tipos de Datos del Runtime (<code>Runtime/types.py</code>)</h3>
+        <p>Para manejar la OOP y las funciones, se definieron "envolturas" (wrappers) para los tipos de datos de Brik:</p>
+        <ul>
+            <li><strong><code>BrikClass</code></strong>: Almacena la "plantilla" de una clase (sus atributos y métodos AST).</li>
+            <li><strong><code>BrikInstance</code></strong>: Almacena un objeto real, con sus <code>fields</code> (diccionario de atributos).</li>
+            <li><strong><code>BrikFunction</code></strong>: Almacena la plantilla de una función global <code>def</code>.</li>
+            <li><strong><code>BrikBoundMethod</code></strong>: Almacena un método *atado* a una instancia (empaqueta <code>self</code> con la función).</li>
+            <li><strong><code>BrikNativeFunction</code></strong>: Envuelve una función de Python (ej. <code>time.sleep</code>) para que Brik pueda llamarla.</li>
+        </ul>
+
+        <h3 id="native-api">Funciones Nativas: El API Esencial del Juego</h3>
+        <p>El <code>Environment</code> inyecta un conjunto de funciones de Python (envueltas en <code>BrikNativeFunction</code>) en el scope global de Brik, permitiendo que el juego interactúe con el sistema.</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Función Nativa (Brik)</th>
+              <th>Descripción Funcional</th>
+              <th>Uso en el Juego</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>len(arr)</code></td>
+              <td>Devuelve la longitud de un array o string.</td>
+              <td><code>while(i < len(serpiente))</code></td>
+            </tr>
+            <tr>
+              <td><code>sleep(ms)</code></td>
+              <td>Pausa la ejecución por milisegundos.</td>
+              <td>Controla la velocidad del Game Loop (FPS) y la gravedad.</td>
+            </tr>
+            <tr>
+              <td><code>rand(min, max)</code></td>
+              <td>Genera un número entero aleatorio.</td>
+              <td>Posición de la comida (Snake) o siguiente pieza (Tetris).</td>
+            </tr>
+            <tr>
+              <td><code>get_key()</code></td>
+              <td>Lee una tecla del teclado (sin bloqueo).</td>
+              <td>Esencial para la interactividad y el movimiento en tiempo real.</td>
+            </tr>
+            <tr>
+              <td><code>clear_screen()</code></td>
+              <td>Limpia la pantalla de la consola (<code>os.system</code>).</td>
+              <td>Permite redibujar la pantalla en cada frame.</td>
+            </tr>
+            <tr>
+              <td><code>push_front(arr, val)</code></td>
+              <td>Inserta un elemento al inicio de un array.</td>
+              <td>Añade la nueva cabeza de la serpiente.</td>
+            </tr>
+            <tr>
+              <td><code>pop_tail(arr)</code></td>
+              <td>Elimina el último elemento de un array.</td>
+              <td>Quita la cola de la serpiente cuando se mueve.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="footer">
+        <p></p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
